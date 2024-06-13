@@ -42,9 +42,30 @@ Rate limiting is a crucial strategy for managing the usage of APIs, database que
 
 ## Real-World Examples
 
-- **GitHub:** Limits unauthenticated requests to 60 per hour and authenticated requests to 5,000 per hour.
-- **Twitter:** Imposes rate limits on user timelines to ensure fair API usage.
-- **Google Maps:** Enforces rate limits to protect its infrastructure and maintain consistent performance.
+### GitHub
+
+GitHub uses a rate-limiting strategy to manage the API usage of its users. For unauthenticated requests, the rate limit is 60 requests per hour. For authenticated requests, the limit increases to 5,000 requests per hour. This prevents abuse of their API and ensures fair usage among users.
+
+More info: [GitHub Rate Limiting](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting)
+
+### Twitter
+
+Twitter’s API imposes rate limits to ensure that their service remains available to all users. For example:
+
+- **User Timelines:** 300 requests per 15-minute window per user.
+- **App Authenticated Requests:** 900 requests per 15-minute window per app.
+
+More info: [Twitter Rate Limiting](https://developer.twitter.com/en/docs/basics/rate-limits)
+
+### Google Maps
+
+Google Maps API enforces rate limits to control the number of requests a user can make within a certain time frame. For instance:
+
+- **Geocoding API:** 50 requests per second.
+- **Directions API:** 50 requests per second.
+
+More info: [Google Maps API Rate Limits](https://developers.google.com/maps/documentation/geocoding/usage-and-billing)
+
 
 ## Conclusion
 
