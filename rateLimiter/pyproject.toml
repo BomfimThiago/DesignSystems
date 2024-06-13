@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "ratelimiter"
+version = "0.1.0"
+description = ""
+authors = ["Thiago Bomfim <bomfimdev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10.14"
+celery = "^5.4.0"
+fastapi = "^0.111.0"
+redis = "^5.0.5"
+uvicorn = "^0.30.1"
+flower = "^2.0.1"
+aioredis = "^2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
