@@ -1,6 +1,6 @@
 import aioredis
 from fastapi import FastAPI, Request, HTTPException
-from celery_worker import redis_url
+from rate_limiter.celery_worker import redis_url
 
 app = FastAPI()
 
@@ -21,14 +21,17 @@ end
 # Redis client
 redis_client = None
 
+
 @app.on_event("startup")
 async def startup_event():
     global redis_client
     redis_client = await aioredis.from_url(redis_url)
 
+
 @app.on_event("shutdown")
 async def shutdown_event():
     await redis_client.close()
+
 
 @app.middleware("http")
 async def verify_token_is_available_in_the_bucket(request: Request, call_next):
@@ -41,10 +44,13 @@ async def verify_token_is_available_in_the_bucket(request: Request, call_next):
     response = await call_next(request)
     return response
 
+
 @app.get("/")
 async def get_resource():
     return {"message": "Congrats, your request was succesfull!"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

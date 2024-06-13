@@ -1,83 +1,35 @@
-# Rate Limiter
+# Rate Limiter API Study
 
-A rate limiter controls the number of retries, such as when attempting to unlock a phone by entering a password. Its primary purpose is to enhance security.
+This project is a study of rate limiter APIs, specifically implementing a rate limiter using the token bucket technique with FastAPI. If you're interested in learning more about rate limiter concepts, you can refer to the [RateLimiter.md](./RateLimiter.md) file.I am currently exploring FastAPI, and I'm open to feedback or suggestions. Please reach out if you see any issues or have ideas for improvement.
 
-For example, YouTube enforces a limit of 20 video uploads per day. After reaching this limit, users must wait 24 hours before uploading more. This helps save storage and prevents any single user from consuming all available storage. Additionally, it allows for better prediction of storage needs and costs based on user activity.
+## How This Project Works
 
-## Designing a Rate Limiter
+Let's say that my system does a request to an external api(an integration lib) and each request to this external api cost money, so I want be sure that I will not spend too much money in a month. So this kind of rate limit could avoid that my api receive more request then I am willing to pay. So I need to be sure that withing a day I have a limited amount of request on my api(which will limit the amount of request in the external api), for this I'm using the token bucket techinique.
 
-When designing a rate limiter, it's important to understand the business context and the specific requirements of the application. Key considerations include:
+A task managed by Celery beat runs every minute, refilling the Redis bucket with 5 tokens. Each request (from any user) consumes one token from the bucket. If there are no tokens left, a 429 Too Many Requests response is returned. So in this case my api accepts only 5 requests per minute. (in a real workd this could be 100, 1000 or any value that suits the business)
 
-- **Define Functional Requirements:** Focus on the most critical aspects of the application.
-- **Application Type:** Are you designing the rate limiter for a backend API, a single API, or a microservice?
+A middleware checks token availability before processing any request. The project uses LUA scripts for token management in Redis to prevent race conditions, ensuring requests are handled sequentially.
 
-For instance, an upload API or a comments API might use a rate limiter as middleware. If a user reaches the rate limit, the rate limiter will intercept requests and return a failure response, thereby throttling the user.
+## Discussions
 
-### Rate Limiter as a Microservice
+Here are some thoughts and questions that arose during the development of this project:
 
-Imagine the rate limiter as a microservice that intercepts requests before they reach the main application. It must manage latency, throughput, availability, and storage. The rules for the rate limiter service should be stored efficiently. For a per-user API rate limiter, you need to store all requests to count the number of requests made by each user within a given period.
+1. **User-Specific Rate Limiting:** If we want to limit the API by users (e.g., tracking by IP address), can we still use the token bucket technique, or would a time window technique be better? How can we restrict user requests without tracking request times, which might necessitate using the time window technique?
 
-### Failure Scenarios
+2. **Failure Scenarios:** What happens if the Celery beat worker goes down and the bucket is not refilled? In this project, the application will simply reject requests when tokens are depleted. Proper failure handling should be implemented.
 
-- **Fail-open:** If the rate limiter goes down, everything continues as if the rate limiter didn't exist.
-- **Fail-closed:** If the rate limiter goes down, all requests are stopped.
+3. **Failure Handling:** What is the best way to handle failures? Should we scale Redis and Celery horizontally to ensure availability, or use a fail-open approach where, if the rate limiter is down, all requests are allowed? The latter could defeat the purpose of rate limiting, especially if it's to control costs of external API usage.
 
-For more details on designing a rate limiter API, refer to this [link](https://medium.com/geekculture/system-design-design-a-rate-limiter-81d200c9d392).
+## How to Run the Project
 
-## Advantages of a Rate Limiter
+1. **Clone the Project:**
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>```
+2. **Build Docker Image**
+   ```bash
+    docker compose build```
 
-- Prevents DoS attacks by blocking excess calls.
-- Reduces costs when using third-party API services charged per call.
-- Reduces server load by filtering out excess requests caused by bots or user misbehavior.
-
-## Rate Limiting Algorithms
-
-### Token Bucket
-
-According to the Stripe tech blog, the token bucket algorithm is used for rate limiting. This algorithm uses a centralized bucket host where tokens are taken on each request, and tokens are added back into the bucket at a controlled rate. If the bucket is empty, the request is rejected. Each Stripe user has a bucket, and tokens are removed from the bucket with every request. Rate limiters are implemented using Redis.
-
-#### Example Use-Case
-
-- Rate-limiting rules: 3 requests per user per minute.
-- Requests within the limit are processed; excess requests return a 429 status code (Too Many Requests).
-
-### Leaky Bucket Algorithm
-
-The leaky bucket algorithm uses a first-in, first-out (FIFO) queue. Incoming requests are appended to the queue, and if there is no room, they are discarded. Requests are processed at regular intervals.
-
-#### Parameters
-
-- **Bucket size:** Queue size.
-- **Outflow rate:** Number of requests processed at a fixed rate.
-
-### Sliding Window Rate Limiter
-
-This algorithm tracks request timestamps, typically using cache (e.g., Redis sorted sets). When a new request arrives, outdated timestamps are removed. If the log size is within the allowed count, the request is accepted; otherwise, it is rejected.
-
-### Fixed Time Window
-
-In a fixed window counter, fixed-size time frames are created, each with a counter responsible for counting hits within that period. If the number of hits exceeds the threshold, all requests in that window are discarded.
-
-## Real-World Examples
-
-### GitHub
-
-GitHub uses a rate-limiting strategy to manage the API usage of its users. For unauthenticated requests, the rate limit is 60 requests per hour. For authenticated requests, the limit increases to 5,000 requests per hour. This prevents abuse of their API and ensures fair usage among users.
-
-- **More info:** [GitHub Rate Limiting](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting)
-
-### Twitter
-
-Twitter’s API imposes rate limits on all API endpoints to ensure that their service remains available to all users. Different types of requests have different rate limits, such as 300 requests per 15 minutes for user timelines.
-
-- **More info:** [Twitter Rate Limiting](https://developer.twitter.com/en/docs/basics/rate-limits)
-
-### Google Maps
-
-Google Maps API enforces a rate limit to control the number of requests a user can make within a certain time frame. This helps to protect their infrastructure from overload and ensures consistent performance for all users.
-
-- **More info:** [Google Maps API Rate Limits](https://developers.google.com/maps/documentation/geocoding/usage-and-billing)
-
-## Conclusion
-
-Rate limiting is essential for maintaining the performance and security of applications. Understanding the business context and carefully designing the rate limiter can ensure efficient and reliable operation.
+3. **Start the Containers**
+   ```bash
+    docker compose up```
