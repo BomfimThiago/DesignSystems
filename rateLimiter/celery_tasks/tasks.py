@@ -1,4 +1,4 @@
-from rate_limiter.celery_worker import celery_app, redis_url
+from celery_worker import celery_app, redis_url
 import redis
 
 

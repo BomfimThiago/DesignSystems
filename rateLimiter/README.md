@@ -1,12 +1,12 @@
 # Rate Limiter API Study
 
-This project is a study of rate limiter APIs, specifically implementing a rate limiter using the token bucket technique with FastAPI. If you're interested in learning more about rate limiter concepts, you can refer to the [RateLimiter.md](./RateLimiter.md) file.I am currently exploring FastAPI, and I'm open to feedback or suggestions. Please reach out if you see any issues or have ideas for improvement.
+This project is a study of rate limiter APIs, specifically implementing a rate limiter using the token bucket technique with FastAPI. If you're interested in learning more about rate limiter concepts, you can refer to the [RateLimiter.md](./RateLimiter.md) file. I am currently exploring FastAPI, and I'm open to feedback or suggestions. Please reach out if you see any issues or have ideas for improvement.
 
 ## How This Project Works
 
-Let's say that my system does a request to an external api(an integration lib) and each request to this external api cost money, so I want be sure that I will not spend too much money in a month. So this kind of rate limit could avoid that my api receive more request then I am willing to pay. So I need to be sure that withing a day I have a limited amount of request on my api(which will limit the amount of request in the external api), for this I'm using the token bucket techinique.
+Let's say that my system makes requests to an external API (an integration library), and each request to this external API costs money. I want to ensure that I do not spend too much money in a month. This type of rate limiter can prevent my API from receiving more requests than I am willing to pay for. For this, I am using the token bucket technique.
 
-A task managed by Celery beat runs every minute, refilling the Redis bucket with 5 tokens. Each request (from any user) consumes one token from the bucket. If there are no tokens left, a 429 Too Many Requests response is returned. So in this case my api accepts only 5 requests per minute. (in a real workd this could be 100, 1000 or any value that suits the business)
+A task managed by Celery beat runs every minute, refilling the Redis bucket with 5 tokens. Each request (from any user) consumes one token from the bucket. If there are no tokens left, a 429 Too Many Requests response is returned. In this example, my API accepts only 5 requests per minute (in a real-world scenario, this could be 100, 1000, or any value that suits the business).
 
 A middleware checks token availability before processing any request. The project uses LUA scripts for token management in Redis to prevent race conditions, ensuring requests are handled sequentially.
 
@@ -28,8 +28,10 @@ Here are some thoughts and questions that arose during the development of this p
    cd <project-directory>```
 2. **Build Docker Image**
    ```bash
-    docker compose build```
+    docker compose build
 
 3. **Start the Containers**
    ```bash
-    docker compose up```
+    docker compose up
+4. Access localhost:8000 if there is a token available you should see `{"message":"Congrats, your request was succesfull!"}`
+if you make more then 5 requets(5 refreshes in the browser will do the trick) per minute you will see a server error message `Internal Server Error`
