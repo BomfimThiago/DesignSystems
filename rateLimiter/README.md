@@ -25,7 +25,7 @@ Here are some thoughts and questions that arose during the development of this p
 1. **Clone the Project:**
    ```bash
    git clone <repository-url>
-   cd <project-directory>```
+   cd <project-directory>/rateLimiter```
 2. **Build Docker Image**
    ```bash
     docker compose build
